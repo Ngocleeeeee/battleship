@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@theme {
+  --font-sans: "Space Grotesk", "Inter", ui-sans-serif, system-ui;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@layer utilities {
+  /* Radial naval grid scanning effect */
+  .radar-grid {
+    background-image: 
+      linear-gradient(rgba(0, 255, 102, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 102, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Scanline effect */
+  .scanline {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      rgba(18, 16, 16, 0) 50%, 
+      rgba(0, 255, 102, 0.12) 50%
+    ), linear-gradient(
+      90deg,
+      rgba(255, 0, 0, 0.06),
+      rgba(0, 255, 0, 0.02),
+      rgba(0, 0, 255, 0.06)
+    );
+    background-size: 100% 4px, 6px 100%;
+  }
+
+  /* Keyframe animations */
+  @keyframes scan {
+    0% {
+      top: -10%;
+    }
+    100% {
+      top: 110%;
+    }
+  }
+
+  @keyframes pulse-glowing {
+    0%, 100% {
+      opacity: 0.1;
+      transform: scale(0.98);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes alert-glow {
+    0%, 100% {
+      box-shadow: 0 0 4px rgba(239, 68, 68, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.6);
+    }
+  }
+
+  .animate-scan {
+    animation: scan 4s linear infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glowing 3s ease-in-out infinite;
+  }
+
+  .animate-alert {
+    animation: alert-glow 1.5s ease-in-out infinite;
+  }
+
+  /* Custom crt monitor border & screen curve feeling */
+  .crt-screen::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: radial-gradient(circle, rgba(18,16,16,0) 60%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+    z-index: 20;
+  }
+}
+
+/* Glowing text helpers */
+.text-glow-green {
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+}
+
+.text-glow-amber {
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* Scrollbar customizations */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #091a16;
+}
+::-webkit-scrollbar-thumb {
+  background: #14b8a6;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0f766e;
+}

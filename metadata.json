@@ -1,0 +1,6 @@
+{
+  "name": "Bắn Thuyền Classic",
+  "description": "Trò chơi Bắn Thuyền (Battleship) cổ điển với giao diện radar hải quân hiện đại, hệ thống âm thanh sống động, AI thông minh và hiệu ứng mượt mà.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
