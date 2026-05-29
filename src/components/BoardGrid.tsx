@@ -16,6 +16,7 @@ interface BoardGridProps {
   onCellMouseLeave?: () => void;
   showUnSunkShips: boolean; // True for player board, or when cheat/reveal is on for computer board
   retro?: boolean;
+  disabled?: boolean; // True if it's playing phase and not this board owner's turn/not active shooting board
 }
 
 export const BoardGrid: React.FC<BoardGridProps> = ({
@@ -31,6 +32,7 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
   onCellMouseLeave,
   showUnSunkShips,
   retro = false,
+  disabled = false,
 }) => {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -63,7 +65,13 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
 
   return (
     <div className={`relative w-[280px] min-[370px]:w-[320px] min-[420px]:w-[365px] sm:w-[420px] md:w-[460px] mx-auto p-3.5 sm:p-5 rounded-3xl border-2 bg-slate-950/95 shadow-[0_4px_30px_rgba(0,0,0,0.4)] select-none font-mono transition-all duration-300
-      ${owner === 'player' ? 'border-teal-500/40 shadow-[0_0_25px_rgba(20,184,166,0.12)]' : 'border-red-500/35 shadow-[0_0_25px_rgba(239,68,68,0.1)]'}`}>
+      ${owner === 'player' 
+        ? (phase === 'playing' && disabled 
+          ? 'border-teal-500/10 opacity-75 scale-[0.98]' 
+          : 'border-teal-500/40 shadow-[0_0_25px_rgba(20,184,166,0.12)]')
+        : (phase === 'playing' && disabled 
+          ? 'border-slate-800 bg-slate-950/70 opacity-50 scale-[0.97] blur-[0.2px]' 
+          : 'border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.15)] ring-2 ring-red-500/20')}`}>
       
       {/* Decorative scanline sweep if retro mode enabled */}
       {retro && (
@@ -171,14 +179,18 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
                               ? 'bg-sky-950/40 border-sky-600/40' 
                               : 'bg-[#081513] border-teal-500/20 hover:border-teal-400/40'
                         }
-                        ${phase === 'playing' && owner === 'computer' && !shot ? 'hover:bg-teal-500/25 hover:border-teal-300 cursor-crosshair hover:scale-[1.08] hover:shadow-[0_0_10px_rgba(20,184,166,0.2)]' : 'cursor-default'}
+                        ${phase === 'playing' && owner === 'computer' && !shot 
+                          ? (disabled 
+                            ? 'cursor-not-allowed opacity-80' 
+                            : 'hover:bg-teal-500/25 hover:border-teal-300 cursor-crosshair hover:scale-[1.08] hover:shadow-[0_0_10px_rgba(20,184,166,0.2)]') 
+                          : 'cursor-default'}
                       `}
-                      onMouseEnter={() => onCellMouseEnter && onCellMouseEnter(rowIdx, colIdx)}
-                      onMouseLeave={() => onCellMouseLeave && onCellMouseLeave()}
-                      onClick={() => onCellClick(rowIdx, colIdx)}
+                      onMouseEnter={() => !disabled && onCellMouseEnter && onCellMouseEnter(rowIdx, colIdx)}
+                      onMouseLeave={() => !disabled && onCellMouseLeave && onCellMouseLeave()}
+                      onClick={() => !disabled && onCellClick(rowIdx, colIdx)}
                     >
                       {/* Hover dynamic radar scope targeting ring */}
-                      {phase === 'playing' && owner === 'computer' && !shot && (
+                      {phase === 'playing' && owner === 'computer' && !shot && !disabled && (
                         <div className="absolute inset-0 w-full h-full bg-radial from-teal-400/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-200"></div>
                       )}
 
@@ -226,7 +238,7 @@ export const BoardGrid: React.FC<BoardGridProps> = ({
                       )}
 
                       {/* Floating center target icon on mouse hover */}
-                      {phase === 'playing' && owner === 'computer' && !shot && (
+                      {phase === 'playing' && owner === 'computer' && !shot && !disabled && (
                         <div className="absolute inset-0 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity duration-200 bg-teal-950/30">
                           <Target className="w-6 h-6 text-teal-300 rotate-45 transform hover:scale-110 active:scale-90 transition-transform duration-100 drop-shadow-[0_0_8px_rgba(20,184,166,0.8)]" />
                         </div>

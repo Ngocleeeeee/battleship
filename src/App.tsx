@@ -1168,189 +1168,306 @@ export default function App() {
         )}
 
         {/* --------------------- STAGE 6: ACTIVE COMBAT PLAYING FLOW (AI & Online unified) --------------------- */}
-        {gamePhase === 'playing' && gameMode && (
-          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 xl:gap-8 items-stretch">
-            
-            {/* Defensive own navy grid canvas viewport */}
-            <div className="order-3 lg:order-1 lg:col-span-5 flex flex-col items-center justify-center p-5 md:p-7 bg-slate-950/90 rounded-3xl border-2 border-teal-500/30 shadow-[0_8px_30px_rgba(20,184,166,0.04)]">
-              <div className="w-full flex items-center justify-between mb-4 border-b border-teal-500/10 pb-3 font-mono">
-                <span className="text-xs md:text-sm font-bold uppercase tracking-widest text-teal-300">
-                  🛡️ THÀNH HẠM ĐỘI QUÂN TA
-                </span>
-                <span className="text-[10px] md:text-xs text-teal-400 bg-teal-950/40 border border-teal-500/20 py-1 px-2.5 rounded-md">
-                  Tàu Ta Sống: <strong>{playerShipsLeft}</strong>/5
-                </span>
-              </div>
+        {gamePhase === 'playing' && gameMode && (() => {
+          const isMyTurn = (gameMode === 'offline' && turn === 'player') || (gameMode === 'online' && turn === socket?.id);
+          return (
+            <div className="w-full flex flex-col gap-6">
+              
+              {/* HIGH-TECH COMMANDER TURN INDICATOR BAR */}
+              <div 
+                className={`w-full p-4 sm:p-5 rounded-3xl border-2 transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg overflow-hidden relative
+                  ${isMyTurn 
+                    ? 'bg-slate-950/95 border-teal-500/40 shadow-[0_0_25px_rgba(20,184,166,0.12)] text-teal-300' 
+                    : 'bg-slate-950/95 border-red-500/40 shadow-[0_0_25px_rgba(239,68,68,0.12)] text-red-400'}`}
+              >
+                {/* Visual scanning grid pulse background */}
+                <div className={`absolute inset-0 opacity-5 pointer-events-none ${isMyTurn ? 'bg-teal-500 animate-pulse' : 'bg-red-500 animate-pulse-glow'}`}></div>
 
-              {/* Fire overlay warning representation */}
-              <div className="relative mb-5 flex flex-col items-center">
-                {((gameMode === 'offline' && turn === 'computer') || (gameMode === 'online' && turn !== socket?.id)) && (
-                  <div className="absolute inset-0 bg-amber-500/5 border border-amber-500/20 blur-[2px] rounded-lg animate-pulse z-20 pointer-events-none"></div>
-                )}
-                
-                <BoardGrid
-                  owner="player"
-                  ships={playerShips}
-                  shots={computerShots}
-                  phase={gamePhase}
-                  activeShipType={null}
-                  activeVertical={false}
-                  hoverCoordinate={null}
-                  onCellClick={() => {}}
-                  showUnSunkShips={true}
-                  retro={retroEffects}
-                />
-              </div>
+                {/* Left Side: Connection / Game Mode status */}
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <div className={`flex items-center justify-center w-11 h-11 rounded-2xl border-2 transition-all duration-300
+                    ${isMyTurn 
+                      ? 'border-teal-400 bg-teal-950/80 text-teal-300 animate-pulse shadow-[0_0_12px_rgba(20,184,166,0.3)]' 
+                      : 'border-red-500/50 bg-red-950/80 text-red-400 font-bold'}`}>
+                    {isMyTurn ? (
+                      <span className="text-xl">⚡</span>
+                    ) : (
+                      <span className="text-xl">⚠️</span>
+                    )}
+                  </div>
+                  <div className="font-mono">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">CHẾ ĐỘ CHỈ HUY</span>
+                    <span className="text-xs sm:text-sm font-black uppercase tracking-wide">
+                      {gameMode === 'online' ? `Trực tuyến: ${roomId}` : 'Chiến đấu với Máy (AI)'}
+                    </span>
+                  </div>
+                </div>
 
-              {/* Own Fleet integrity status trackers */}
-              <div className="w-full flex flex-col gap-2 mt-2 font-mono">
-                <span className="text-[10px] text-teal-500/50 uppercase tracking-widest mb-1">
-                  Chỉ số sức bền hạm đội của ta:
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {SHIPS.map((ship) => {
-                    const inst = playerShips.find((s) => s.type === ship.type);
-                    const isSunk = inst ? inst.sunk : false;
-                    const hitCount = inst ? inst.hits.filter(h => h).length : 0;
-                    return (
-                      <div 
-                        key={`health-allied-${ship.type}`}
-                        className={`p-2 rounded-lg border text-center text-[10px] transition-all
-                          ${isSunk 
-                            ? 'bg-red-950/20 border-red-500/30 text-red-400 opacity-60 line-through' 
-                            : hitCount > 0
-                              ? 'bg-amber-950/20 border-amber-500/30 text-amber-300'
-                              : 'bg-slate-900 border-teal-500/10 text-teal-400'
-                          }
-                        `}
-                      >
-                        <div className="font-bold truncate">{ship.name.split(' ').pop()}</div>
-                        <div className="text-[9px] opacity-70 mt-0.5">Vỏ: {ship.size - hitCount}/{ship.size}</div>
-                      </div>
-                    );
-                  })}
+                {/* Center Block: Huge explicit statement of whose turn */}
+                <div className="flex-1 text-center py-2 px-4 border-y md:border-y-0 md:border-x border-teal-500/10 min-w-[200px] sm:min-w-[280px]">
+                  {isMyTurn ? (
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <span className="text-sm sm:text-base md:text-lg font-black tracking-widest uppercase text-teal-400 text-glow-green animate-pulse">
+                        🎯 LƯỢT KHAI HỎA CỦA BẠN!
+                      </span>
+                      <span className="text-[10px] text-teal-400/80 font-medium">
+                        Chọn tọa độ thích hợp trên RADAR ĐỊCH (Bên Phải) để dội pháo!
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <span className="text-sm sm:text-base md:text-lg font-black tracking-widest uppercase text-red-500 text-glow-red animate-pulse">
+                        ⚠️ ĐỊCH ĐANG CHỌN TỌA ĐỘ BẮN!
+                      </span>
+                      <span className="text-[10px] text-red-400/80 font-medium">
+                        Vui lòng chờ đợi trong khi hạm đội địch đang tiến hành không kích...
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Block: Ship live summary */}
+                <div className="flex items-center gap-4 font-mono text-center w-full md:w-auto justify-around sm:justify-end">
+                  <div>
+                    <span className="block text-[9px] text-slate-500 font-black uppercase">TẦU TA SỐNG</span>
+                    <span className="text-xs sm:text-sm font-black text-teal-300">
+                      {playerShipsLeft} <span className="text-slate-600">/ 5</span>
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-teal-500/10 hidden sm:block"></div>
+                  <div>
+                    <span className="block text-[9px] text-slate-500 font-black uppercase">TẦU ĐỊCH SỐNG</span>
+                    <span className="text-xs sm:text-sm font-black text-rose-400">
+                      {enemyShipsLeft} <span className="text-slate-600">/ 5</span>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Tactical turn manager and stats sidebar - Center */}
-            <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col gap-4 self-stretch justify-between">
-              
-              {/* Turn Indicator notifier */}
-              <div className="p-4 rounded-2xl bg-slate-950/95 border-2 border-teal-500/30 flex flex-col items-center justify-center text-center gap-2 shadow-[0_0_15px_rgba(20,184,166,0.05)] h-32 select-none">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-teal-500/60 block">
-                  TRẠM QUYỀN KHAI HỎA
-                </span>
+              {/* THREE SIDES PLAY FLOW */}
+              <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 xl:gap-8 items-stretch">
                 
-                {((gameMode === 'offline' && turn === 'player') || (gameMode === 'online' && turn === socket?.id)) ? (
-                  <div className="animate-pulse">
-                    <span className="text-md font-extrabold uppercase tracking-widest text-[#00ff99] text-glow-green font-mono block">
-                      LƯỢT KHAI HỎA TA
-                    </span>
-                    <span className="text-[9px] text-teal-400/80 font-mono mt-1 block">
-                      Bấm vào radar đối phương bên phải!
-                    </span>
+                {/* 1. PLAN / DEFENSIVE FLEET GRID - OWN SHIPS */}
+                <div className={`order-3 lg:order-1 lg:col-span-5 flex flex-col items-center justify-center p-5 md:p-7 bg-slate-950/90 rounded-3xl border-2 transition-all duration-300
+                  ${!isMyTurn 
+                    ? 'border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.06)]' 
+                    : 'border-teal-500/20 shadow-[0_8px_30px_rgba(20,184,166,0.02)]'}`}>
+                  
+                  <div className="w-full flex items-center justify-between mb-4 border-b border-teal-500/10 pb-3 font-mono">
+                    <div className="flex items-center gap-1.5">
+                      {!isMyTurn ? (
+                        <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+                      ) : (
+                        <span className="inline-block w-2.5 h-2.5 rounded-full bg-teal-400/60"></span>
+                      )}
+                      <span className={`text-xs md:text-sm font-bold uppercase tracking-widest ${!isMyTurn ? 'text-red-400' : 'text-teal-300'}`}>
+                        🛡️ THÀNH HẠM ĐỘI QUÂN TA
+                      </span>
+                    </div>
+                    
+                    {!isMyTurn ? (
+                      <span className="text-[10px] md:text-xs text-red-400 bg-red-950/30 border border-red-500/20 py-1 px-2.5 rounded-md animate-pulse uppercase font-bold">
+                        ⚠️ ĐỊCH ĐANG NHẮM BẮN
+                      </span>
+                    ) : (
+                      <span className="text-[10px] md:text-xs text-teal-400 bg-teal-950/40 border border-teal-500/20 py-1 px-2.5 rounded-md font-bold">
+                        🟢 TRẠNG THÁI: AN TOÀN
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <div className="animate-pulse flex flex-col items-center">
-                    <span className="text-md font-extrabold uppercase tracking-widest text-amber-500 text-glow-amber font-mono block">
-                      LƯỢT ĐỐI PHƯƠNG
-                    </span>
-                    <span className="w-16 h-1 mt-2.5 bg-amber-500 rounded-full animate-pulse"></span>
-                  </div>
-                )}
-              </div>
 
-              {/* Real-time battle performance tracking widgets */}
-              <div className="p-4 bg-slate-950/80 rounded-2xl border border-teal-500/20 text-xs font-mono text-center flex flex-col gap-2.5 self-center w-full justify-center h-28">
-                <div className="font-bold uppercase tracking-wider text-teal-400 mb-0.5">Bản tin chiến quả</div>
-                <div className="grid grid-cols-2 gap-1 text-[11px] text-[#00ff99]">
-                  <div className="border-r border-teal-500/20 pr-2">
-                    <div>Tổng Loạt Phóng</div>
-                    <div className="font-bold text-sm text-white mt-0.5">{totalPlayerFires}</div>
+                  {/* Fire overlay warning representation */}
+                  <div className="relative mb-5 flex flex-col items-center">
+                    {!isMyTurn && (
+                      <div className="absolute inset-0 bg-red-500/5 border border-red-500/10 blur-[2px] rounded-lg animate-pulse z-20 pointer-events-none"></div>
+                    )}
+                    
+                    <BoardGrid
+                      owner="player"
+                      ships={playerShips}
+                      shots={computerShots}
+                      phase={gamePhase}
+                      activeShipType={null}
+                      activeVertical={false}
+                      hoverCoordinate={null}
+                      onCellClick={() => {}}
+                      showUnSunkShips={true}
+                      retro={retroEffects}
+                      disabled={isMyTurn} // Disable clicks/hovers on player grid
+                    />
                   </div>
-                  <div className="pl-2">
-                    <div>Thiệt hại địch</div>
-                    <div className="font-bold text-sm text-rose-400 mt-0.5">
-                      {gameMode === 'online' ? onlineWinsCount : computerShips.filter(s => s.sunk).length}/5
+
+                  {/* Own Fleet integrity status trackers */}
+                  <div className="w-full flex flex-col gap-2 mt-2 font-mono">
+                    <span className="text-[10px] text-teal-500/50 uppercase tracking-widest mb-1">
+                      Chỉ số sức bền hạm đội của ta:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {SHIPS.map((ship) => {
+                        const inst = playerShips.find((s) => s.type === ship.type);
+                        const isSunk = inst ? inst.sunk : false;
+                        const hitCount = inst ? inst.hits.filter(h => h).length : 0;
+                        return (
+                          <div 
+                            key={`health-allied-${ship.type}`}
+                            className={`p-2 rounded-lg border text-center text-[10px] transition-all
+                              ${isSunk 
+                                ? 'bg-red-950/20 border-red-500/30 text-red-400 opacity-60 line-through' 
+                                : hitCount > 0
+                                  ? 'bg-amber-950/20 border-amber-500/30 text-amber-300'
+                                  : 'bg-slate-900 border-teal-500/10 text-teal-400'
+                              }
+                            `}
+                          >
+                            <div className="font-bold truncate">{ship.name.split(' ').pop()}</div>
+                            <div className="text-[9px] opacity-70 mt-0.5">Vỏ: {ship.size - hitCount}/{ship.size}</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="hidden lg:flex p-3 rounded-xl bg-slate-950/40 border border-teal-500/10 text-[9px] font-mono text-teal-500/50 leading-relaxed text-center justify-center items-center">
-                Mạch truyền vô tuyến fm-98.5 liên tục phục trang radar của ta hỏa tốc!
-              </div>
+                {/* 2. CENTRAL PANEL - SCOREBOARD & DETAILS */}
+                <div className="order-1 lg:order-2 lg:col-span-2 flex flex-col gap-4 self-stretch justify-between">
+                  
+                  {/* Turn Indicator notifier */}
+                  <div className={`p-4 rounded-2xl bg-slate-950/95 border-2 flex flex-col items-center justify-center text-center gap-2 shadow-lg h-32 select-none transition-all duration-300
+                    ${isMyTurn ? 'border-teal-500/50 shadow-[0_0_15px_rgba(20,184,166,0.12)]' : 'border-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.12)]'}`}>
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500 block">
+                      QUYỀN KIỂM SOÁT
+                    </span>
+                    
+                    {isMyTurn ? (
+                      <div className="animate-pulse">
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#00ff99] text-glow-green font-mono block">
+                          TA KHAI HỎA
+                        </span>
+                        <span className="text-[9px] text-teal-400/80 font-mono mt-1 block leading-tight">
+                          Radar địch đang mở!
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="animate-pulse flex flex-col items-center">
+                        <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-red-500 text-glow-red font-mono block">
+                          ĐỊCH TẤN CÔNG
+                        </span>
+                        <span className="w-16 h-1 mt-2 bg-red-500 rounded-full animate-pulse"></span>
+                      </div>
+                    )}
+                  </div>
 
-            </div>
-
-            {/* Attack Radar Opponent Grid Display - Right */}
-            <div className="order-2 lg:order-3 lg:col-span-5 flex flex-col items-center justify-center p-5 md:p-7 bg-slate-950/90 rounded-3xl border-2 border-red-500/30 shadow-[0_8px_30px_rgba(239,68,68,0.03)]">
-              <div className="w-full flex items-center justify-between mb-4 border-b border-teal-500/10 pb-3 font-mono">
-                <span className="text-xs md:text-sm font-bold uppercase tracking-widest text-red-400">
-                  🔴 RADAR DÒ THUYỀN kẻ thù
-                </span>
-                <span className="text-[10px] md:text-xs text-rose-400 bg-red-950/30 border border-red-500/20 py-1 px-2.5 rounded-md">
-                  Tàu Địch Còn: <strong>{enemyShipsLeft}</strong>/5
-                </span>
-              </div>
-
-              <div className="relative mb-5 flex flex-col items-center">
-                {((gameMode === 'offline' && turn === 'player') || (gameMode === 'online' && turn === socket?.id)) && (
-                  <div className="absolute inset-0 bg-teal-400/5 border border-teal-500/20 blur-[1.5px] rounded-lg animate-pulse z-20 pointer-events-none"></div>
-                )}
-
-                <BoardGrid
-                  owner="computer"
-                  ships={gameMode === 'online' ? (currentOpponent?.ships || []) : computerShips}
-                  shots={playerShots}
-                  phase={gamePhase}
-                  activeShipType={null}
-                  activeVertical={false}
-                  hoverCoordinate={null}
-                  onCellClick={handleCellClickFire}
-                  showUnSunkShips={gameMode === 'online' ? cheatMode : cheatMode} // Allow looking if scanning active
-                  retro={retroEffects}
-                />
-              </div>
-
-              {/* Competitor damage health panel */}
-              <div className="w-full flex flex-col gap-2 mt-2 font-mono">
-                <span className="text-[10px] text-teal-500/50 uppercase tracking-widest mb-1">
-                  Trạng thái phá hoại hạm đội địch:
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {SHIPS.map((ship) => {
-                    const inst = gameMode === 'online'
-                      ? currentOpponent?.ships?.find(s => s.type === ship.type)
-                      : computerShips.find((s) => s.type === ship.type);
-                    const isSunk = inst ? inst.sunk : false;
-                    const isHit = inst ? inst.hits.some(h => h) : false;
-                    return (
-                      <div 
-                        key={`health-enemy-${ship.type}`}
-                        className={`p-2 rounded-lg border text-center text-[10px] transition-all
-                          ${isSunk 
-                            ? 'bg-rose-950/40 border-red-500/40 text-red-400 line-through font-bold' 
-                            : isHit
-                              ? 'bg-amber-950/20 border-amber-500/20 text-amber-400'
-                              : 'bg-slate-900 border-teal-500/10 text-teal-500/40'
-                          }
-                        `}
-                      >
-                        <div className="truncate">{ship.name.split(' ').pop()}</div>
-                        <div className="text-[9px] opacity-70 mt-0.5">
-                          {isSunk ? 'SUNK' : isHit ? 'DAMAGED' : 'HIDDEN'}
+                  {/* Real-time battle performance tracking widgets */}
+                  <div className="p-4 bg-slate-950/80 rounded-2xl border border-teal-500/20 text-xs font-mono text-center flex flex-col gap-2.5 self-center w-full justify-center h-28">
+                    <div className="font-bold uppercase tracking-wider text-teal-400 mb-0.5">Bản tin chiến quả</div>
+                    <div className="grid grid-cols-2 gap-1 text-[11px] text-[#00ff99]">
+                      <div className="border-r border-teal-500/20 pr-2">
+                        <div>Tổng Loạt Phóng</div>
+                        <div className="font-bold text-sm text-white mt-0.5">{totalPlayerFires}</div>
+                      </div>
+                      <div className="pl-2">
+                        <div>Thiệt hại địch</div>
+                        <div className="font-bold text-sm text-rose-400 mt-0.5">
+                          {gameMode === 'online' ? onlineWinsCount : computerShips.filter(s => s.sunk).length}/5
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </div>
+
+                  <div className="hidden lg:flex p-3 rounded-xl bg-slate-950/40 border border-teal-500/10 text-[9px] font-mono text-teal-500/40 leading-relaxed text-center justify-center items-center">
+                    Hệ thống vô tuyến sóng ngắn sonar liên tục quét tọa độ chiến trận!
+                  </div>
+
                 </div>
+
+                {/* 3. ATTACK RADAR (RIGHT BOARD) - OPPONENT GRID */}
+                <div className={`order-2 lg:order-3 lg:col-span-5 flex flex-col items-center justify-center p-5 md:p-7 bg-slate-950/90 rounded-3xl border-2 transition-all duration-300
+                  ${isMyTurn 
+                    ? 'border-teal-500/50 shadow-[0_0_35px_rgba(20,184,166,0.15)] ring-1 ring-teal-500/30' 
+                    : 'border-slate-800 bg-slate-950/45 shadow-[0_8px_30px_rgba(0,0,0,0.4)] opacity-75'}`}>
+                  
+                  <div className="w-full flex items-center justify-between mb-4 border-b border-teal-500/10 pb-3 font-mono">
+                    <div className="flex items-center gap-1.5">
+                      {isMyTurn ? (
+                        <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                      ) : (
+                        <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+                      )}
+                      <span className={`text-xs md:text-sm font-bold uppercase tracking-widest ${isMyTurn ? 'text-teal-300' : 'text-slate-400'}`}>
+                        🔴 RADAR DÒ THUYỀN kẻ thù
+                      </span>
+                    </div>
+
+                    {isMyTurn ? (
+                      <span className="text-[10px] md:text-xs text-emerald-400 bg-emerald-950/50 border border-emerald-500/30 py-1 px-2.5 rounded-md uppercase font-bold animate-pulse">
+                        🔥 KHAI HỎA SẴN SÀNG
+                      </span>
+                    ) : (
+                      <span className="text-[10px] md:text-xs text-slate-500 bg-slate-900 border border-slate-800 py-1 px-2.5 rounded-md font-bold uppercase">
+                        🔒 ĐANG ĐÓNG RADAR
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="relative mb-5 flex flex-col items-center">
+                    {isMyTurn && (
+                      <div className="absolute inset-0 bg-teal-400/5 border border-teal-500/20 blur-[1.5px] rounded-lg animate-pulse z-20 pointer-events-none"></div>
+                    )}
+
+                    <BoardGrid
+                      owner="computer"
+                      ships={gameMode === 'online' ? (currentOpponent?.ships || []) : computerShips}
+                      shots={playerShots}
+                      phase={gamePhase}
+                      activeShipType={null}
+                      activeVertical={false}
+                      hoverCoordinate={null}
+                      onCellClick={handleCellClickFire}
+                      showUnSunkShips={gameMode === 'online' ? cheatMode : cheatMode} // Allow looking if scanning active
+                      retro={retroEffects}
+                      disabled={!isMyTurn} // Disable targeting on enemy board when it is opponent's turn!!
+                    />
+                  </div>
+
+                  {/* Competitor damage health panel */}
+                  <div className="w-full flex flex-col gap-2 mt-2 font-mono">
+                    <span className="text-[10px] text-teal-500/50 uppercase tracking-widest mb-1">
+                      Trạng thái phá hoại hạm đội địch:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {SHIPS.map((ship) => {
+                        const inst = gameMode === 'online'
+                          ? currentOpponent?.ships?.find(s => s.type === ship.type)
+                          : computerShips.find((s) => s.type === ship.type);
+                        const isSunk = inst ? inst.sunk : false;
+                        const isHit = inst ? inst.hits.some(h => h) : false;
+                        return (
+                          <div 
+                            key={`health-enemy-${ship.type}`}
+                            className={`p-2 rounded-lg border text-center text-[10px] transition-all
+                              ${isSunk 
+                                ? 'bg-rose-950/40 border-red-500/40 text-red-400 line-through font-bold' 
+                                : isHit
+                                  ? 'bg-amber-950/20 border-amber-500/20 text-amber-400'
+                                  : 'bg-slate-900 border-teal-500/10 text-teal-500/40'
+                              }
+                            `}
+                          >
+                            <div className="truncate">{ship.name.split(' ').pop()}</div>
+                            <div className="text-[9px] opacity-70 mt-0.5">
+                              {isSunk ? 'SUNK' : isHit ? 'DAMAGED' : 'HIDDEN'}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
-
-          </div>
-        )}
+          );
+        })()}
 
         {/* --------------------- BOTTOM BAR: CENTRALIZED COMMAND CENTER FEED LOGS --------------------- */}
         {(gamePhase === 'playing' || logs.length > 0) && (
